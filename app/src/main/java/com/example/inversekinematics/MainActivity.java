@@ -12,11 +12,14 @@ import com.example.inversekinematics.classes.Segment;
 import com.example.inversekinematics.classes.Vector;
 import com.example.inversekinematics.views.MainView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     static boolean running = true;
     private final Handler handler = new Handler();
     private final int UPDATE_DELAY = 50;
-    Segment tentacle;
+    private List<Segment> tentacle = new ArrayList<>();
     MainView view;
 
     public static void setRunning(boolean runn) {
@@ -27,15 +30,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Segment current = new Segment(30, 20, 30);
-        for (int i = 0; i < 10; i++) {
-            Segment next = new Segment(current, 30);
-            current.setChild(next);
-            current = next;
+        Segment head = new Segment(100, 100, 30);
+        tentacle.add(head);
+        for (int i = 1; i < 10; i++) {
+            tentacle.add(new Segment(tentacle.get(i - 1)));
         }
-
-        tentacle = current;
 
         view = findViewById(R.id.MainView);
         view.setOnTouchListener(this);
@@ -79,10 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     private void calculateFollowPoint(double touchX, double touchY) {
-        double oldX = view.getTargetX();
-        double oldY = view.getTargetY();
+        Vector old = new Vector(view.getTarget());
 
-        Vector direction = new Vector(touchX - oldX, touchY - oldY);
+        Vector direction = new Vector(touchX - old.getX(), touchY - old.getY());
         direction.setMag(10);
 
         view.setDirection(direction);

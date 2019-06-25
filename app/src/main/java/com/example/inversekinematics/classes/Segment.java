@@ -1,8 +1,6 @@
 package com.example.inversekinematics.classes;
 
 public class Segment {
-    Segment parent = null;
-    Segment child;
     private Vector a;
     private Vector b = new Vector();
     private double angle;
@@ -15,28 +13,27 @@ public class Segment {
         calculateEnd();
     }
 
-    public Segment(Segment parent, double len) {
-        this.parent = parent;
-        this.a = new Vector(parent.b.getX(), parent.b.getY());
-        this.len = len;
+    public Segment(Segment parent) {
+        this.a = new Vector(parent.b);
+        this.len = parent.len;
         calculateEnd();
     }
 
-    // Polar to cartesian
+    /**
+     * Calculates the end-point of the segment in polar coordinates based on the length
+     */
     private void calculateEnd() {
+        // Polar to cartesian
         double dx = len * Math.cos(angle);
         double dy = len * Math.sin(angle);
+
         b.setX(a.getX() + dx);
         b.setY(a.getY() + dy);
     }
 
-    public void follow() {
-        double targetX = child.a.getX();
-        double targetY = child.a.getY();
-
-        follow(targetX, targetY);
-    }
-
+    /**
+     * Makes the segment follow certain coordinate
+     */
     public void follow(double targetX, double targetY) {
         double dy = targetY - a.getY();
         double dx = targetX - a.getX();
@@ -51,30 +48,26 @@ public class Segment {
         a = Vector.add(target, dir);
     }
 
+    /**
+     * Recalculates the end-point of given segment
+     */
     public void update() {
         calculateEnd();
     }
 
-    public Segment getChild() {
-        return child;
-    }
-
-    public void setChild(Segment child) {
-        this.child = child;
-    }
-
-    public Segment getParent() {
-        return parent;
-    }
-
-    public void setParent(Segment parent) {
-        this.parent = parent;
-    }
-
+    /**
+     * Getter for the front-point of the segment
+     *
+     * @return
+     */
     public Vector getA() {
         return a;
     }
 
+    /**
+     * Getter for the end-point of the segment
+     * @return
+     */
     public Vector getB() {
         return b;
     }
