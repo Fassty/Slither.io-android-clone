@@ -14,12 +14,22 @@ public class Vector {
         this.y = y;
     }
 
+    public Vector(Vector src) {
+        this.x = src.getX();
+        this.y = src.getY();
+    }
+
     public static Vector sub(Vector a, Vector b) {
         return new Vector(a.getX() - b.getX(), a.getY() - b.getY());
     }
 
     public static Vector add(Vector a, Vector b) {
         return new Vector(a.getX() + b.getX(), a.getY() + b.getY());
+    }
+
+    public static double dist(Vector a, Vector b) {
+        Vector diff = new Vector(b.getX() - a.getX(), b.getY() - a.getY());
+        return diff.getLen();
     }
 
     public void normalize() {
