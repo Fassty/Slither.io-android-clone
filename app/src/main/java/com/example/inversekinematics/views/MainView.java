@@ -7,79 +7,42 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.example.inversekinematics.MainActivity;
 import com.example.inversekinematics.classes.Segment;
+import com.example.inversekinematics.classes.Snake;
 import com.example.inversekinematics.classes.Vector;
+import com.example.inversekinematics.engine.GameEngine;
 
 import java.util.List;
 
 public class MainView extends View {
-    Paint mPaint = new Paint();
-    List<Segment> segment;
-
-    Vector target = new Vector(100, 100);
-    Vector direction = new Vector();
+    private final int BODY_RADIUS = 35;
+    private final int FOOD_RADIUS = 35;
+    boolean sizeSet = false;
+    private Paint mPaint = new Paint();
+    private Snake snake;
+    private List<Vector> apples;
 
     public MainView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public void setView(List<Segment> segment) {
-        this.segment = segment;
+    public void setView(Snake snake) {
+        this.snake = snake;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (segment != null) {
+        if (!sizeSet) {
+            GameEngine.screenSize = new Vector(getWidth(), getHeight());
+        }
 
-            // Check for
-            if (target.getX() < 0 || target.getY() < 0 || target.getX() > getWidth() || target.getY() > getHeight()) {
-                MainActivity.setRunning(false);
-            }
-
-            // Get the direction of movement
-            target.setX(target.getX() + direction.getX());
-            target.setY(target.getY() + direction.getY());
-            System.out.println("TARGET X : " + target.getX() + "|  TARGET Y : " + target.getY());
-
-            // Make the head follow touch
-            Segment head = segment.get(segment.size() - 1);
-            head.follow(target.getX(), target.getY());
-            head.update();
-
-            // Get the center of the head segment for display
-            double cx = (head.getA().getX() + head.getB().getX()) / 2;
-            double cy = (head.getA().getY() + head.getB().getY()) / 2;
-            mPaint.setColor(Color.RED);
-            canvas.drawCircle((float) cx, (float) cy, 35, mPaint);
-
-            for (int i = 0; i < segment.size() - 1; i++) {
-                // Make the rest of the tail follow the head
-                Segment current = segment.get(i);
-                Segment next = segment.get(i + 1);
-                current.follow(next.getA().getX(), next.getA().getY());
-                current.update();
-
-                // Calculate circle centers
-                cx = (current.getA().getX() + current.getB().getX()) / 2;
-                cy = (current.getA().getY() + current.getB().getY()) / 2;
+        if (snake != null && snake.getSnake() != null) {
+            for (Segment segment : snake.getSnake()) {
                 mPaint.setColor(Color.DKGRAY);
-                canvas.drawCircle((float) cx, (float) cy, 35, mPaint);
+                canvas.drawCircle((float) segment.getCenter().getX(), (float) segment.getCenter().getY(), BODY_RADIUS, mPaint);
             }
         }
-    }
-
-    public void setDirection(Vector direction) {
-        this.direction = direction;
-    }
-
-    public Vector getTarget() {
-        return target;
-    }
-
-    public void setTarget(Vector target) {
-        this.target = target;
     }
 }

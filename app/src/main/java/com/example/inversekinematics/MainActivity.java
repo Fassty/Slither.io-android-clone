@@ -8,35 +8,26 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.inversekinematics.classes.Segment;
 import com.example.inversekinematics.classes.Vector;
+import com.example.inversekinematics.engine.GameEngine;
+import com.example.inversekinematics.enums.GameState;
 import com.example.inversekinematics.views.MainView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
-    static boolean running = true;
     private final Handler handler = new Handler();
     private final int UPDATE_DELAY = 50;
-    private List<Segment> tentacle = new ArrayList<>();
-    MainView view;
-
-    public static void setRunning(boolean runn) {
-        running = runn;
-    }
+    private GameEngine gameEngine;
+    private MainView view;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Segment head = new Segment(100, 100, 30);
-        tentacle.add(head);
-        for (int i = 1; i < 10; i++) {
-            tentacle.add(new Segment(tentacle.get(i - 1)));
-        }
-
         view = findViewById(R.id.MainView);
+
+        gameEngine = new GameEngine();
+        gameEngine.init();
+
         view.setOnTouchListener(this);
 
         startUpdateHandler();
@@ -46,15 +37,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (running) {
-                    handler.postDelayed(this, UPDATE_DELAY);
-                }
+                gameEngine.update();
 
-                if (!running) {
+                if (gameEngine.getCurrentState() == GameState.Running) {
+                    handler.postDelayed(this, UPDATE_DELAY);
+                } else if (gameEngine.getCurrentState() == GameState.Lost) {
                     onGameLost();
                 }
 
-                view.setView(tentacle);
+                view.setView(gameEngine.getSnake());
                 view.invalidate();
             }
         }, UPDATE_DELAY);
@@ -78,12 +69,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     private void calculateFollowPoint(double touchX, double touchY) {
-        Vector old = new Vector(view.getTarget());
+        Vector old = new Vector(gameEngine.getTarget());
 
         Vector direction = new Vector(touchX - old.getX(), touchY - old.getY());
         direction.setMag(10);
 
-        view.setDirection(direction);
+        gameEngine.setDirection(direction);
     }
 
     private void onGameLost() {

@@ -71,4 +71,8 @@ public class Segment {
     public Vector getB() {
         return b;
     }
+
+    public Vector getCenter() {
+        return new Vector((a.getX() + b.getX()) / 2, (a.getY() + b.getY()) / 2);
+    }
 }
