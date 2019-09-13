@@ -1,5 +1,6 @@
 package com.example.inversekinematics;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -8,7 +9,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.inversekinematics.classes.Vector;
 import com.example.inversekinematics.engine.GameEngine;
 import com.example.inversekinematics.enums.GameState;
 import com.example.inversekinematics.views.MainView;
@@ -16,6 +16,7 @@ import com.example.inversekinematics.views.MainView;
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     private final Handler handler = new Handler();
     private final int UPDATE_DELAY = 50;
+    private final double QUATERNION = Math.PI / 4;
     private GameEngine gameEngine;
     private MainView view;
 
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // getSupportActionBar().hide();
         view = findViewById(R.id.MainView);
 
         gameEngine = new GameEngine();
@@ -43,9 +45,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     handler.postDelayed(this, UPDATE_DELAY);
                 } else if (gameEngine.getCurrentState() == GameState.Lost) {
                     onGameLost();
+                } else if (gameEngine.getCurrentState() == GameState.TimedOut) {
+                    onGameEnded();
                 }
 
-                view.setView(gameEngine.getSnake());
+                view.setView(gameEngine.getPlayerSnake(), gameEngine.getEnemySnakes(), gameEngine.getFood());
                 view.invalidate();
             }
         }, UPDATE_DELAY);
@@ -55,10 +59,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public boolean onTouch(View view, MotionEvent e) {
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                calculateFollowPoint(e.getX(), e.getY());
+                gameEngine.calculateFollowPoint(e.getX(), e.getY());
                 break;
             case MotionEvent.ACTION_MOVE:
-                calculateFollowPoint(e.getX(), e.getY());
+                gameEngine.calculateFollowPoint(e.getX(), e.getY());
                 break;
             case MotionEvent.ACTION_UP:
                 break;
@@ -68,16 +72,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         return true;
     }
 
-    private void calculateFollowPoint(double touchX, double touchY) {
-        Vector old = new Vector(gameEngine.getTarget());
+    private void onGameLost() {
 
-        Vector direction = new Vector(touchX - old.getX(), touchY - old.getY());
-        direction.setMag(10);
+        startActivity(new Intent(MainActivity.this, GameLostPopUp.class));
 
-        gameEngine.setDirection(direction);
     }
 
-    private void onGameLost() {
-        Toast.makeText(this, "You lost!", Toast.LENGTH_SHORT).show();
+    private void onGameEnded() {
+        Toast.makeText(this, "You win!", Toast.LENGTH_LONG).show();
     }
 }

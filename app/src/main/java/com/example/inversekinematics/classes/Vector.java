@@ -24,6 +24,9 @@ public class Vector {
     }
 
     public static Vector add(Vector a, Vector b) {
+        if (a == null && b == null) return null;
+        if (a == null) return b;
+        if (b == null) return a;
         return new Vector(a.getX() + b.getX(), a.getY() + b.getY());
     }
 
@@ -48,7 +51,7 @@ public class Vector {
         mult(len);
     }
 
-    private double getLen() {
+    public double getLen() {
         return Math.sqrt((this.x * this.x) + (this.y * this.y));
     }
 
@@ -75,5 +78,13 @@ public class Vector {
         Vector vector = (Vector) o;
         return Double.compare(vector.getX(), getX()) == 0 &&
                 Double.compare(vector.getY(), getY()) == 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Vector{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 }

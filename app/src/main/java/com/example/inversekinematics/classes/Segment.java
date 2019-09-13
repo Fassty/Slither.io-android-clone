@@ -13,6 +13,13 @@ public class Segment {
         calculateEnd();
     }
 
+    public Segment(Vector u, double len) {
+        this.a = new Vector(u);
+        this.len = len;
+
+        calculateEnd();
+    }
+
     public Segment(Segment parent) {
         this.a = new Vector(parent.b);
         this.len = parent.len;
