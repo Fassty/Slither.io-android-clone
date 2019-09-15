@@ -18,12 +18,37 @@ import com.example.inversekinematics.enums.SnakeType;
 
 import java.util.List;
 
+/**
+ * Displays the current game state
+ *
+ * @author Pavel Mikulas
+ * @version %I%, %G%
+ */
 public class MainView extends View {
+    /**
+     * Size of the food
+     */
+    public final int FOOD_RADIUS = 8;
     private Paint mPaint = new Paint();
+    /**
+     * Reference to the player snake
+     */
     private Snake playerSnake;
+    /**
+     * Reference to enemy snakes
+     */
     private List<Snake> enemySnakes;
+    /**
+     * Reference to food
+     */
     private List<Food> food;
 
+    /**
+     * Create a new view and retrieve srceen size
+     *
+     * @param context main display
+     * @param attrs
+     */
     public MainView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -32,12 +57,24 @@ public class MainView extends View {
         GameEngine.screenSize = new Vector(dm.widthPixels, dm.heightPixels);
     }
 
+    /**
+     * Set references to game objects
+     *
+     * @param snake       reference to the player snake
+     * @param enemySnakes reference to enemy snakes
+     * @param food        reference to food
+     */
     public void setView(Snake snake, List<Snake> enemySnakes, List<Food> food) {
         this.playerSnake = snake;
         this.enemySnakes = enemySnakes;
         this.food = food;
     }
 
+    /**
+     * Display all the game objects on the main display
+     *
+     * @param canvas game screen
+     */
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -46,7 +83,7 @@ public class MainView extends View {
         if (food != null) {
             for (Vector apple : food) {
                 mPaint.setColor(Color.RED);
-                canvas.drawCircle((float) apple.getX(), (float) apple.getY(), GameEngine.FOOD_RADIUS, mPaint);
+                canvas.drawCircle((float) apple.getX(), (float) apple.getY(), FOOD_RADIUS, mPaint);
             }
         }
 

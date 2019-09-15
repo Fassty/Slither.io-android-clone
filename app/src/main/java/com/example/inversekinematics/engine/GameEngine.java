@@ -14,14 +14,44 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Main class for managing the game
+ * <p>
+ * Updates the game state and handles player and enemy movement and food spawning
+ *
+ * @author Pavel Mikulas
+ * @version %I%, %G%
+ */
 public class GameEngine {
     //region Static variables
-    public static final int FOOD_RADIUS = 8;
+    /**
+     * Dimensions of the screen
+     */
     public static Vector screenSize;
+    /**
+     * Remaining game time ticks
+     */
     public static int timeLeft;
+    /**
+     * Current player score
+     */
     private static int score;
     //endregion
+
     //region SpawnLocations
+    /**
+     * Current game state (Running, Lost, TimedOut)
+     */
+    private static GameState currentState;
+    //endregion
+
+    //region Private variables
+    private Random random = new Random();
+    /**
+     * List of enemy spawn locations
+     * <p>
+     * Enemies are spawning offscreen
+     */
     private final List<Vector> spawnLocations = new ArrayList() {{
         add(new Vector(-50, -50));
         add(new Vector(screenSize.getX() / 2, -50));
@@ -31,38 +61,79 @@ public class GameEngine {
         add(new Vector(screenSize.getX() + 50, screenSize.getY() + 50));
         add(new Vector(screenSize.getX() + 50, screenSize.getY() / 2));
     }};
-    //region Private variables
-    private Random random = new Random();
-    private GameState currentState;
-    //endregion
+    /**
+     * Maximum number of food that can spawn without any enemies dying
+     */
     private int foodLimit;
-    //region GameObjects
-    private Snake playerSnake;
-    private List<Snake> enemySnakes;
-    //endregion
-    private List<Food> food;
-    //region Player
-    private Vector target;
-    private Vector direction;
-    //endregion
+
+    /**
+     * Current number of food on the screen
+     */
     private int foodCount;
     //endregion
 
+    //region GameObjects
+    /**
+     * Reference to the player's Snake
+     */
+    private Snake playerSnake;
+    /**
+     * List of references to the enemy snakes
+     */
+    private List<Snake> enemySnakes;
+    /**
+     * List of food present on the screen
+     */
+    private List<Food> food;
+    //endregion
+
+    //region Player movement
+    /**
+     * Target for the player snake to follow
+     */
+    private Vector target;
+    /**
+     * Direction of player movement
+     */
+    private Vector direction;
+    //endregion
+
+    /**
+     * Create a new GameEngine
+     */
     public GameEngine() {
     }
 
+    //region Public methods
+
+    /**
+     * Get current player score
+     *
+     * @return current player score
+     */
     public static int getScore() {
         return score;
     }
 
-    //region Public methods
+    /**
+     * Get current game state
+     *
+     * @return current game state
+     */
+    public static GameState getCurrentState() {
+        return currentState;
+    }
+
+    /**
+     * Initialize the game
+     */
     public void init() {
         enemySnakes = new ArrayList<>();
         food = new ArrayList<>();
         target = new Vector(500, 700);
         direction = new Vector(1, 0);
         score = 0;
-        timeLeft = 3000;
+        timeLeft = 1800;
         foodLimit = 25;
         foodCount = 0;
 
@@ -72,6 +143,9 @@ public class GameEngine {
         currentState = GameState.Running;
     }
 
+    /**
+     * Main game update function
+     */
     public void update() {
         updateTime();
 
@@ -83,7 +157,13 @@ public class GameEngine {
 
         removeDeadEnemies();
     }
+    //endregion
 
+    //region Initialization methods
+
+    /**
+     * Make each enemy follow some point based on its type
+     */
     private void updateEnemyPositions() {
         for (Snake snake : enemySnakes) {
             Vector dir = new Vector();
@@ -110,8 +190,13 @@ public class GameEngine {
             }
         }
     }
-    //endregion
 
+    /**
+     * Calculate the direction of player movement based on touch coordinates
+     *
+     * @param touchX x touch coordinate
+     * @param touchY y touch coordinate
+     */
     public void calculateFollowPoint(double touchX, double touchY) {
         Vector old = new Vector(this.target);
 
@@ -121,7 +206,9 @@ public class GameEngine {
         this.direction = direction;
     }
 
-    //region Initialization methods
+    /**
+     * Create a new Snake with 11 Segments and make initialize its direction to (0,10)
+     */
     private void createSnake() {
         List<Segment> body = new ArrayList<>();
 
@@ -136,6 +223,11 @@ public class GameEngine {
         direction.setMag(10);
     }
 
+    /**
+     * Create given number of enemy snakes and randomize snake type
+     *
+     * @param count number of snakes to be created
+     */
     private void addEnemySnakes(int count) {
         for (int i = 0; i < count; i++) {
             List<Segment> body = new ArrayList<>();
@@ -152,15 +244,31 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Create set number of food at free positions (not on top of snake bodies)
+     *
+     * @param count number of food to be created
+     */
     private void addFood(int count) {
         for (int i = 0; i < count; i++) {
             food.add(new Food(getEmptyPosition()));
             foodCount++;
         }
     }
+    //endregion
 
+    //region Update Helper-Methods
+
+    /**
+     * Generate a random empty position (not occupied by any other object)
+     *
+     * @return free position Vector
+     */
     private Vector getEmptyPosition() {
+        // Start with a random position
         Vector apple = new Vector(random.nextInt(1080), random.nextInt(1584));
+        // Repeat until the position isn't free
+        // Can be really slow if the snakes take large portion of the screen
         while (true) {
             if (screenSize == null) {
                 break;
@@ -177,16 +285,22 @@ public class GameEngine {
             apple = new Vector(random.nextInt((int) Math.floor(screenSize.getX())), random.nextInt((int) Math.floor(screenSize.getY())));
         }
 
-        // Safety plug before screensize is set
+        // Dummy value before screensize is set
         return apple;
     }
-    //endregion
 
+    /**
+     * Create new food at given position and add it to the list
+     * @param position food spawn position
+     */
     private void spawnFoodAt(Vector position) {
         food.add(new Food(position));
     }
 
-    //region Update Helper-Methods
+    /**
+     * Decrease remaining time, add increase food limit every few seconds and end the game when
+     * time has elapsed
+     */
     private void updateTime() {
         timeLeft--;
 
@@ -202,6 +316,9 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Recalculate the target of player movement and update the snake body position
+     */
     private void updatePlayerPosition() {
         List<Segment> body = playerSnake.getSnake();
 
@@ -225,6 +342,9 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Check for any collisions that may happen
+     */
     private void checkForCollisions() {
         checkInbounds();
 
@@ -237,6 +357,13 @@ public class GameEngine {
         addEnemySnakes(respawnCount);
     }
 
+    /**
+     * Check whether two snakes are colliding
+     *
+     * @param src colliding Snake
+     * @param other collider Snake
+     * @return True if src Snake crashed into other Snake
+     */
     private boolean collision(Snake src, Snake other) {
         Segment head = src.getHead();
 
@@ -249,6 +376,9 @@ public class GameEngine {
         return false;
     }
 
+    /**
+     * Kill the player if he gets out of bounds
+     */
     private void checkInbounds() {
         if (outOfBounds(target)) {
             currentState = GameState.Lost;
@@ -256,11 +386,19 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Check if player's target lies within bounds
+     * @param target target of player's movement
+     * @return True if player attempts to move out of bounds
+     */
     private boolean outOfBounds(Vector target) {
         if (screenSize == null) return false;
         return target.getX() < 0 || target.getY() < 0 || target.getX() > screenSize.getX() || target.getY() > screenSize.getY();
     }
 
+    /**
+     * Check if player snake collides with any food source
+     */
     private void checkPlayerFoodCollision() {
         if (playerSnake.eat(food)) {
             foodCount--;
@@ -272,7 +410,15 @@ public class GameEngine {
             addFood(foodLimit - foodCount);
         }
     }
+    //endregion
 
+    //region EnemyMovement
+
+    /**
+     * Check if any enemy has crashed into player
+     *
+     * @return number of collided enemies
+     */
     private int checkPlayerEnemyCollisions() {
         int respawnCount = 0;
 
@@ -305,16 +451,22 @@ public class GameEngine {
         return respawnCount;
     }
 
-
-    //endregion
-
+    /**
+     * Remove each dead snake from the enemy snake list
+     */
     private void removeDeadEnemies() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             enemySnakes.removeIf(e -> e.getState() == SnakeState.DEAD);
         }
     }
 
-    //region EnemyMovement
+    /**
+     * Based on the enemy type calculate its movement direction
+     *
+     * @param snake target Snake
+     * @param unsafe if true enemy will not try to avoid the player
+     * @return new direction Vector
+     */
     private Vector getSnakeDirection(Snake snake, boolean unsafe) {
         Food closest = getClosestFood(snake, unsafe);
         Vector dir;
@@ -337,6 +489,15 @@ public class GameEngine {
         return dir;
     }
 
+    //endregion
+
+    /**
+     * Find the closest food source based on proximity from the snake and type of the snake
+     *
+     * @param snake target Snake
+     * @param unsafe if true enemy will not try to avoid the player
+     * @return reference to the closest Food
+     */
     private Food getClosestFood(Snake snake, boolean unsafe) {
         double minDist = Double.MAX_VALUE;
         Food closest = null;
@@ -345,7 +506,7 @@ public class GameEngine {
             double dist = Vector.dist(snake.getHead().getCenter(), food);
 
             // If food is not safe to eat and snake is playing safe, don't follow it
-            if (!unsafe && !safeToEat(food, snake)) {
+            if (!unsafe && !safeToEat(food)) {
                 continue;
             }
             if (dist < minDist && dist > 15 && (!food.isTaken() || food.isMine(snake))) {
@@ -357,7 +518,15 @@ public class GameEngine {
         return closest;
     }
 
-    private boolean safeToEat(Vector food, Snake target) {
+    //region Getters & Setters
+
+    /**
+     * Check if food is in safe distance from player's head (at least 250px)
+     *
+     * @param food reference to the Food
+     * @return True if food is in a safe distance from player's head
+     */
+    private boolean safeToEat(Vector food) {
         if (Vector.dist(this.playerSnake.getHead().getCenter(), food) < playerSnake.getBodySize() + 250) {
             return false;
         }
@@ -365,8 +534,12 @@ public class GameEngine {
         return true;
     }
 
-    //endregion
-
+    /**
+     * Update the enemy position and snake body
+     *
+     * @param snake reference to an enemy Snake
+     * @param dir direction Vector
+     */
     private void moveEnemy(Snake snake, Vector dir) {
         Vector head = snake.getHead().getCenter();
 
@@ -383,33 +556,31 @@ public class GameEngine {
         }
     }
 
-    //region Getters & Setters
+    /**
+     * Get the reference to the player snake
+     *
+     * @return reference to the player snake
+     */
     public Snake getPlayerSnake() {
         return playerSnake;
     }
 
+    /**
+     * Get the list of enemy snakes
+     *
+     * @return list of enemy snakes
+     */
     public List<Snake> getEnemySnakes() {
         return enemySnakes;
     }
 
+    /**
+     * Get the list of Food on screen
+     *
+     * @return list of Food
+     */
     public List<Food> getFood() {
         return food;
-    }
-
-    public Vector getTarget() {
-        return target;
-    }
-
-    public Vector getDirection() {
-        return direction;
-    }
-
-    public void setDirection(Vector direction) {
-        this.direction = direction;
-    }
-
-    public GameState getCurrentState() {
-        return currentState;
     }
     //endregion
 }

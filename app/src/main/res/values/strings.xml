@@ -5,5 +5,7 @@
     <string name="game_ended">Time expired. You survived!</string>
     <string name="score_text">Score:</string>
     <string name="restart">Restart</string>
-    <string name="exit">Exit</string>
+    <string name="menu">Menu</string>
+    <string name="play">Play</string>
+    <string name="header">MadSnakes</string>
 </resources>
